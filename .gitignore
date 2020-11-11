@@ -1,0 +1,10 @@
+logs/*
+!logs/.htaccess
+!logs/todel.txt.txt
+config.inc.php
+sftp-config.json
+test/templates_c/*
+tabdata.php
+parent_tabdata.php
+user_privileges/*
+db/*
