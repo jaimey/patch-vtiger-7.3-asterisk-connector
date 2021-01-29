@@ -54,6 +54,8 @@
     <script type="text/javascript" src="{vresource_url('layouts/v7/modules/Vtiger/resources/CkEditor.js')}"></script>
     <script type="text/javascript" src="{vresource_url('layouts/v7/modules/Documents/resources/Documents.js')}"></script>
    
+    <script type="text/javascript" src="libraries/visibility/visibility.min.js"></script>
+    <script type="text/javascript" src="libraries/jquery/pnotify/jquery.pnotify.min.js"></script>
     {foreach key=index item=jsModel from=$SCRIPTS}
         <script type="{$jsModel->getType()}" src="{vresource_url($jsModel->getSrc())}"></script>
     {/foreach}

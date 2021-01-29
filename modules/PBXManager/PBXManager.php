@@ -48,6 +48,7 @@ class PBXManager extends CRMEntity {
         'User'     => 'user',
         'Recording' => 'recordingurl',
         'Start Time' => 'starttime',
+        'Incoming Line Name' => 'incominglinename',
     );
     // Make the field link to detail view
     var $list_link_field = 'customernumber';
@@ -80,6 +81,16 @@ class PBXManager extends CRMEntity {
     }
     function PBXManager(){
         self::__construct();
+    }
+    function getListQuery($module, $where='') {
+        global $current_user;
+        $query = "SELECT vtiger_crmentity.*, vtiger_pbxmanager.*, vtiger_pbxmanagercf.* FROM vtiger_pbxmanager "
+                . "INNER JOIN vtiger_crmentity ON vtiger_crmentity.crmid=vtiger_pbxmanager.pbxmanagerid "
+                . "INNER JOIN vtiger_pbxmanagercf ON vtiger_pbxmanagercf.pbxmanagerid=vtiger_pbxmanager.pbxmanagerid ";
+            $query .= getNonAdminAccessControlQuery($module, $current_user);
+            $query .= "WHERE vtiger_crmentity.deleted = 0 ". $where;
+            
+        return $query;
     }
     
      /**

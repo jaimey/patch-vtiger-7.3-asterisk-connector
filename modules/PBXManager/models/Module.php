@@ -95,7 +95,7 @@ class PBXManager_Module_Model extends Vtiger_Module_Model {
 	}
 
 	public function isWorkflowSupported() {
-		return false;
+		return true;
 	}
 
 	function isStarredEnabled(){

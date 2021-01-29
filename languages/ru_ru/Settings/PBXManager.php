@@ -10,20 +10,20 @@
  * *********************************************************************************** */
 $languageStrings = array(
     'LBL_SELECT_ONE' => 'Выберите',
-    'LBL_PBXManager' =>'PBXManager',
-    'LBL_PBXMANAGER_CONFIG' => 'Подробные сведения о сервере Asterisk',
-    'LBL_NOTE' => 'Note:',
-    'LBL_INFO_WEBAPP_URL' => 'Настройте URL Asterisk App в формате', 
-    'LBL_FORMAT_WEBAPP_URL' => '(Протокол) :/ / (asterisk_ip): (порт)',
+    'LBL_PBXMANAGER' => 'Звонки',
+    'LBL_PBXMANAGER_CONFIG' => 'Подробные сведения о SalesPlatform Asterisk Connector',
+    'LBL_NOTE' => 'Примечание:',
+    'LBL_INFO_WEBAPP_URL' => 'Укажите URL адрес в формате', 
+    'LBL_FORMAT_WEBAPP_URL' => '(Протокол)://(asterisk_connector_ip):(порт)',
     'LBL_FORMAT_INFO_WEBAPP_URL' => 'например: http://0.0.0.0:5000',
-    'LBL_INFO_CONTEXT' => 'Vtiger конкретном контексте, сконфигурированные в вашей Asterisk сервера (extensions.conf)',
-    'LBL_PBXMANAGER_INFO' => 'Настроить Asterisk сервер детали после Установка Vtiger звездочка разъем вашего сервера Asterisk',
+    'LBL_INFO_CONTEXT' => 'Vtiger Specfic контекст, настроенных в Asterisk сервер (extensions.conf)',
+    'LBL_PBXMANAGER_INFO' => 'Не забудьте настроить параметры конфигурации SalesPlatform Asterisk Connector после его установки на сервер',
     
-    'webappurl'=>'Vtiger Askterisk веб URL',
-    'vtigersecretkey'=>'Vtiger Секретный ключ',
-    'outboundcontext' => 'Исходящий Контекст',
-    'outboundtrunk' => 'Исходящий багажника',
     
+    'webappurl' => 'URL адрес',
+    'vtigersecretkey' => 'Секретный ключ',
+    'outboundcontext' => 'Контекст',
+    'outboundtrunk' => 'Транк',
 );
 
 $jsLanguageStrings = array(

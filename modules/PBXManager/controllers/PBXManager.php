@@ -38,14 +38,63 @@ class PBXManager_PBXManager_Controller {
                 break;
             case "Hangup" :
                 $callCause = $request->get('causetxt');
-                if ($callCause == "null") {
+                if ($callCause == "null" || empty($callCause)) {
                     break;
                 }
                 $this->processHangupCall($request);
+                break;                
+            case "DialBegin" :
+                $this->processDialBeginCall($request);
                 break;
         }
     }
 
+    // begin alternative start call detection mode
+    /**
+     * Function to process Incoming call request
+     * @params <array> incoming call details
+     * return Response object
+     */
+    function processDialBeginCall($request) {
+        $callerNumber = $request->get('callerIdNumber');
+        
+        /* Get dialed number by caller. It has unified format so we need check variants */
+        $destinationNumber = '';
+        if(strpos($request->get('dialString'), "/") !== false) {
+            $dialParts = explode("/", $request->get('dialString'));
+            $destinationNumber = end($dialParts);
+        } elseif(strpos($request->get('dialString'), "@") !== false) {
+            $dialParts = explode("@", $request->get('dialString'));
+            $destinationNumber = $dialParts[0];
+        } else {
+            $destinationNumber = $request->get('dialString');
+        }
+        
+        /* If not Originate event - prepare begin of call */
+        if($callerNumber != $destinationNumber && !empty($destinationNumber) && !empty($callerNumber)) {
+            $callerUserInfo = PBXManager_Record_Model::getUserInfoWithNumber($callerNumber);
+   
+            /* If caller number binded with crm user - it outgoing number */
+            $connector = $this->getConnector();
+            if ($callerUserInfo) {
+                $request->set('Direction', 'outbound');
+                $request->set('to', $destinationNumber);
+                $customerInfo = PBXManager_Record_Model::lookUpRelatedWithNumber($destinationNumber, $callerUserInfo['id']);
+                $connector->handleStartupCall($request, $callerUserInfo, $customerInfo);
+            } else {
+
+                /* If no match of twon numbers for crm users - don't fix ring */
+                $crmUserInfo = PBXManager_Record_Model::getUserInfoWithNumber($destinationNumber);
+                if(!$crmUserInfo) {
+                    return;
+                }
+                $request->set('Direction', 'inbound');
+                $request->set('from', $request->get('callerIdNumber'));
+                $customerInfo = PBXManager_Record_Model::lookUpRelatedWithNumber($request->get('callerIdNumber'), $crmUserInfo['id']);
+                $connector->handleStartupCall($request, $crmUserInfo, $customerInfo);
+            }
+        }
+    }
     /**
      * Function to process Incoming call request
      * @params <array> incoming call details

@@ -2718,6 +2718,12 @@ Vtiger.Class("Vtiger_Detail_Js",{
 		});
 	},
 
+    registerAudioFieldClickEvent: function() {
+        var detailContentsHolder = this.getContentHolder();       		
+        detailContentsHolder.on('click', 'audio', function (e) {
+			e.stopPropagation();
+		});
+    },
 
 	registerEvents : function() {
 		this._super();
@@ -2725,6 +2731,7 @@ Vtiger.Class("Vtiger_Detail_Js",{
 		var detailContentsHolder = this.getContentHolder();
 		var self = this;
 		this.registerSendSmsSubmitEvent();
+        this.registerAudioFieldClickEvent();
 		detailContentsHolder.on('click','.viewThread', function(e){
 			var currentTarget = jQuery(e.currentTarget);
 			var currentTargetParent = currentTarget.parent();
