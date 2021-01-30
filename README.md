@@ -1,4 +1,4 @@
-Asterisk Connector for Vtiger 7.3
+Patch to make vtiger 7.3 compatible with Asterisk / Freepbx via SPAsteriskConnector
 ==========
 
 This patch makes Vtiger 7.3 compatible with [SPAsteriskConnector](https://salesplatform24.com/?page_id=2831)
