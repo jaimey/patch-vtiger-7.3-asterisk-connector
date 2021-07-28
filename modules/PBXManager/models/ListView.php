@@ -177,9 +177,7 @@ class PBXManager_ListView_Model extends Vtiger_ListView_Model {
             $recordingUrl = explode('>', $listViewEntries[$recordId]['recordingurl']);
             $url = explode('<', $recordingUrl[1]);
             if ($url[0] != '' && $listViewEntries[$recordId]['callstatus'] == 'completed') {
-                $listViewEntries[$recordId]['recordingurl'] = '<audio preload="metadata" src="index.php?module=PBXManager&action=ListenRecord&record='.$recordId.'" controls>
-                    <a href="index.php?module=PBXManager&action=ListenRecord&record='.$recordId.'" ><i class="icon-volume-up"></i></a>
-                </audio>';
+                $listViewEntries[$recordId]['recordingurl'] = '';
             } else {
                 $listViewEntries[$recordId]['recordingurl'] = '';
             }
