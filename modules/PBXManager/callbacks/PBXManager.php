@@ -23,6 +23,11 @@ class PBXManager_PBXManager_Callbacks {
     }
 
     function process($request){
+        $log = new PBXManager_PBXManager_Connector;
+        if ($log->getlogPBXManager()=="1") {
+            $txt= print_r($request,true);
+            file_put_contents('logs/PBXManager-Callbacks','(' . date('Y-m-d H:i:s') . ') ' . $txt.PHP_EOL , FILE_APPEND | LOCK_EX);
+        }
 	$pbxmanagerController = new PBXManager_PBXManager_Controller();
         $connector = $pbxmanagerController->getConnector();
         if($this->validateRequest($connector->getVtigerSecretKey(),$request)) {

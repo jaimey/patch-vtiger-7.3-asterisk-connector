@@ -23,6 +23,7 @@ $languageStrings = array(
     'vtigersecretkey'=>'Clave secreta de Vtiger',
     'outboundcontext' => 'Contexto saliente',
     'outboundtrunk' => 'Línea saliente',
+    'logPBXManager' => 'Log',    
     
 );
 

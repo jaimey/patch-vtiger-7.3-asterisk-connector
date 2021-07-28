@@ -15,12 +15,13 @@ require_once 'vtlib/Vtiger/Net/Client.php';
 class PBXManager_PBXManager_Connector {
 
     // hide trunk field
-    private static $SETTINGS_REQUIRED_PARAMETERS = array('webappurl' => 'text','outboundcontext' => 'text', 'vtigersecretkey' => 'text');
+    private static $SETTINGS_REQUIRED_PARAMETERS = array('webappurl' => 'text','outboundcontext' => 'text', 'vtigersecretkey' => 'text','logPBXManager' => 'text');
     private static $RINGING_CALL_PARAMETERS = array('From' => 'callerIdNumber', 'SourceUUID' => 'callUUID', 'Direction' => 'Direction', 'IncomingLineName' => 'connectedLineName');
     private static $NUMBERS = array();
     private $webappurl;
     private $outboundcontext, $outboundtrunk;
     private $vtigersecretkey;
+    private $logPBXManager;
     const RINGING_TYPE = 'ringing';
     const ANSWERED_TYPE = 'answered';
     const HANGUP_TYPE = 'hangup';
@@ -48,6 +49,9 @@ class PBXManager_PBXManager_Connector {
 
     public function getServer() {
         return $this->webappurl;
+    }
+    public function getlogPBXManager(){
+        return $this->logPBXManager;
     }
 
     public function getOutboundContext() { 
@@ -80,6 +84,7 @@ class PBXManager_PBXManager_Connector {
         $this->outboundcontext = $serverModel->get('outboundcontext'); 
         $this->outboundtrunk = $serverModel->get('outboundtrunk'); 
         $this->vtigersecretkey = $serverModel->get('vtigersecretkey');
+        $this->logPBXManager = $serverModel->get('logPBXManager');        
     }
 
     /**
@@ -347,6 +352,7 @@ class PBXManager_PBXManager_Connector {
         $webappurl = $this->getServer();
         $context = $this->getOutboundContext(); 
         $vtigerSecretKey = $this->getVtigerSecretKey();
+        $logPBXManager =$this->getlogPBXManager();
 
         $serviceURL  =  $webappurl;
         $serviceURL .= '/makecall?event=OutgoingCall&';
@@ -355,6 +361,10 @@ class PBXManager_PBXManager_Connector {
         $serviceURL .= 'to=' . urlencode($number) . '&';
         $serviceURL .= 'context='. urlencode($context);
 
+        if ($logPBXManager=="1") {
+            $txt= print_r($serviceURL,true);
+            file_put_contents('logs/PBXManager-serviceURL','(' . date('Y-m-d H:i:s') . ') ' . $txt.PHP_EOL , FILE_APPEND | LOCK_EX);
+        }
         $httpClient = new Vtiger_Net_Client($serviceURL);
         $response = $httpClient->doPost(array());
         $response = trim($response); 

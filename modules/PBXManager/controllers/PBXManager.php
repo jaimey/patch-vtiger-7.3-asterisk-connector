@@ -94,6 +94,20 @@ class PBXManager_PBXManager_Controller {
                 $connector->handleStartupCall($request, $crmUserInfo, $customerInfo);
             }
         }
+        $log = $this->getConnector();
+
+        if ($log->getlogPBXManager()=="1") {
+            $logg['callerNumber']       = $callerNumber;
+            $logg['destinationNumber']  = $destinationNumber;
+            $logg['StartTime']  = $request->get('StartTime');
+            $logg['callstatus']  = $request->get('callstatus');
+            $logg['callerUserInfo']  = $callerUserInfo;
+            $logg['customerInfo']  = $customerInfo;
+            $logg['direction']  = $request->get('Direction');
+
+            $message = print_r($logg, true);
+            file_put_contents('logs/PBXManager-process','(' . date('Y-m-d H:i:s') . ') ' . $message . PHP_EOL,FILE_APPEND | LOCK_EX);
+        }    
     }
     /**
      * Function to process Incoming call request
