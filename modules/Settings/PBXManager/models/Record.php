@@ -69,7 +69,7 @@ class Settings_PBXManager_Record_Model extends Settings_Vtiger_Record_Model {
     
     public function save() {
 		$db = PearDatabase::getInstance();
-		$parameters = '';
+		$parameters = array();
 		$selectedGateway = $this->get('gateway');
                 $connector = new PBXManager_PBXManager_Connector;
                 
