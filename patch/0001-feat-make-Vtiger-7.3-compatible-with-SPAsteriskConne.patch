@@ -1,12 +1,13 @@
-From c4ef17f01702d65c1b00eabe284835bc1290737c Mon Sep 17 00:00:00 2001
+From 4ba63b618741c44d8b3905d2c4fc49d268c23219 Mon Sep 17 00:00:00 2001
 From: Jaime <jayepesviloria@gmail.com>
-Date: Fri, 29 Jan 2021 15:36:34 -0500
+Date: Sun, 1 Aug 2021 16:18:09 -0500
 Subject: [PATCH] feat: make Vtiger 7.3 compatible with SPAsteriskConnector
 
 ---
  languages/en_us/Vtiger.php                    |   1 +
+ languages/es_mx/Settings/PBXManager.php       |   1 +
  languages/es_mx/Vtiger.php                    |   3 +-
- languages/ru_ru/PBXManager.php                |  63 ++++++++-
+ languages/ru_ru/PBXManager.php                |  63 +++++++-
  languages/ru_ru/Settings/PBXManager.php       |  22 +--
  layouts/v7/modules/Vtiger/Header.tpl          |   1 +
  layouts/v7/modules/Vtiger/JSResources.tpl     |   2 +
@@ -16,19 +17,21 @@ Subject: [PATCH] feat: make Vtiger 7.3 compatible with SPAsteriskConnector
  libraries/visibility/visibility.min.js        |   1 +
  modules/PBXManager/PBXManager.php             |  11 ++
  modules/PBXManager/PBXManagerHandler.php      |   1 -
- .../PBXManager/actions/IncomingCallPoll.php   |  22 ++-
- modules/PBXManager/actions/ListenRecord.php   |  68 ++++++++++
- modules/PBXManager/callbacks/SPAgi.php        |  68 ++++++++++
- modules/PBXManager/connectors/PBXManager.php  | 102 +++++++++-----
- modules/PBXManager/controllers/PBXManager.php |  51 ++++++-
- modules/PBXManager/models/ListView.php        |  46 ++++---
+ .../PBXManager/actions/IncomingCallPoll.php   |  24 ++-
+ modules/PBXManager/actions/ListenRecord.php   |  68 ++++++++
+ modules/PBXManager/callbacks/PBXManager.php   |   5 +
+ modules/PBXManager/callbacks/SPAgi.php        |  68 ++++++++
+ modules/PBXManager/connectors/PBXManager.php  | 113 +++++++++----
+ modules/PBXManager/controllers/PBXManager.php |  72 ++++++++-
+ modules/PBXManager/models/ListView.php        |  44 +++--
  modules/PBXManager/models/Module.php          |   2 +-
- modules/PBXManager/models/Record.php          | 128 +++++++++++++++---
- modules/PBXManager/resources/PBXManagerJS.js  |  63 +++++++--
- modules/PBXManager/uitypes/Url.php            |  24 ++++
- modules/PBXManager/views/Detail.php           |  33 +++--
- modules/Vtiger/models/RelationListView.php    |  12 ++
- 24 files changed, 619 insertions(+), 121 deletions(-)
+ modules/PBXManager/models/Record.php          | 153 +++++++++++++++---
+ modules/PBXManager/resources/PBXManagerJS.js  |  63 ++++++--
+ modules/PBXManager/uitypes/Url.php            |  24 +++
+ modules/PBXManager/views/Detail.php           |  33 ++--
+ modules/Settings/PBXManager/models/Record.php |   2 +-
+ modules/Vtiger/models/RelationListView.php    |  10 ++
+ 27 files changed, 681 insertions(+), 122 deletions(-)
  create mode 100644 libraries/visibility/visibility.min.js
  create mode 100644 modules/PBXManager/actions/ListenRecord.php
  create mode 100644 modules/PBXManager/callbacks/SPAgi.php
@@ -46,6 +49,18 @@ index fec3340..fb2de22 100755
  	'JS_PASSWORD_MISMATCH_ERROR' => 'Please re-enter passwords. The "new password" and "confirm password" values do not match.',
  	'LBL_LIST_DELETE_CONFIRMATION' => 'Are you sure you want to delete?',
  	'JS_WIDGET_RESIZING_WAIT_MSG' => 'Widget contents will load after resizing.',
+diff --git a/languages/es_mx/Settings/PBXManager.php b/languages/es_mx/Settings/PBXManager.php
+index a74ab30..bc09acd 100644
+--- a/languages/es_mx/Settings/PBXManager.php
++++ b/languages/es_mx/Settings/PBXManager.php
+@@ -23,6 +23,7 @@ $languageStrings = array(
+     'vtigersecretkey'=>'Clave secreta de Vtiger',
+     'outboundcontext' => 'Contexto saliente',
+     'outboundtrunk' => 'Línea saliente',
++    'logPBXManager' => 'Log',    
+     
+ );
+ 
 diff --git a/languages/es_mx/Vtiger.php b/languages/es_mx/Vtiger.php
 index 9081820..9e59cc2 100644
 --- a/languages/es_mx/Vtiger.php
@@ -311,7 +326,7 @@ index 0b38a26..c051811 100644
          }
      }
 diff --git a/modules/PBXManager/actions/IncomingCallPoll.php b/modules/PBXManager/actions/IncomingCallPoll.php
-index 0a0d1fa..b71a80d 100644
+index 0a0d1fa..db140c2 100644
 --- a/modules/PBXManager/actions/IncomingCallPoll.php
 +++ b/modules/PBXManager/actions/IncomingCallPoll.php
 @@ -67,9 +67,17 @@ class PBXManager_IncomingCallPoll_Action extends Vtiger_Action_Controller{
@@ -343,7 +358,7 @@ index 0a0d1fa..b71a80d 100644
                  }
                  // End
                  $direction = $recordModel->get('direction');
-@@ -101,7 +112,8 @@ class PBXManager_IncomingCallPoll_Action extends Vtiger_Action_Controller{
+@@ -101,9 +112,10 @@ class PBXManager_IncomingCallPoll_Action extends Vtiger_Action_Controller{
              $user = Users_Record_Model::getCurrentUserModel();
              $moduleName = $request->get('modulename');
              $name = explode("@",$request->get('email'));
@@ -351,8 +366,11 @@ index 0a0d1fa..b71a80d 100644
 +            $element['lastname'] = $request->get('lastname');
 +            $element['firstname'] = $request->get('firstname');
              $element['email'] = $request->get('email');
-             $element['phone'] = $request->get('number');
+-            $element['phone'] = $request->get('number');
++            $element['mobile'] = $request->get('number');
              $element['assigned_user_id'] = vtws_getWebserviceEntityId('Users', $user->id);
+             
+             $moduleInstance = Vtiger_Module_Model::getInstance($moduleName);
 @@ -134,8 +146,10 @@ class PBXManager_IncomingCallPoll_Action extends Vtiger_Action_Controller{
          $id = vtws_getIdComponents($customer['id']);
          $sourceuuid = $request->get('callid');
@@ -441,6 +459,22 @@ index 0000000..c700b22
 +    }
 +}
 \ No newline at end of file
+diff --git a/modules/PBXManager/callbacks/PBXManager.php b/modules/PBXManager/callbacks/PBXManager.php
+index 6d9e5ff..5473c34 100644
+--- a/modules/PBXManager/callbacks/PBXManager.php
++++ b/modules/PBXManager/callbacks/PBXManager.php
+@@ -23,6 +23,11 @@ class PBXManager_PBXManager_Callbacks {
+     }
+ 
+     function process($request){
++        $log = new PBXManager_PBXManager_Connector;
++        if ($log->getlogPBXManager()=="1") {
++            $txt= print_r($request,true);
++            file_put_contents('logs/PBXManager-Callbacks','(' . date('Y-m-d H:i:s') . ') ' . $txt.PHP_EOL , FILE_APPEND | LOCK_EX);
++        }
+ 	$pbxmanagerController = new PBXManager_PBXManager_Controller();
+         $connector = $pbxmanagerController->getConnector();
+         if($this->validateRequest($connector->getVtigerSecretKey(),$request)) {
 diff --git a/modules/PBXManager/callbacks/SPAgi.php b/modules/PBXManager/callbacks/SPAgi.php
 new file mode 100644
 index 0000000..659d1ed
@@ -517,22 +551,45 @@ index 0000000..659d1ed
 +$agiCallback->process(new Vtiger_Request($_REQUEST));
 \ No newline at end of file
 diff --git a/modules/PBXManager/connectors/PBXManager.php b/modules/PBXManager/connectors/PBXManager.php
-index 7982710..fd56b0d 100644
+index 7982710..53fa5ef 100644
 --- a/modules/PBXManager/connectors/PBXManager.php
 +++ b/modules/PBXManager/connectors/PBXManager.php
-@@ -14,8 +14,9 @@ require_once 'vtlib/Vtiger/Net/Client.php';
+@@ -14,12 +14,14 @@ require_once 'vtlib/Vtiger/Net/Client.php';
  
  class PBXManager_PBXManager_Connector {
  
 -    private static $SETTINGS_REQUIRED_PARAMETERS = array('webappurl' => 'text','outboundcontext' => 'text', 'outboundtrunk' => 'text' , 'vtigersecretkey' => 'text');
 -    private static $RINGING_CALL_PARAMETERS = array('From' => 'callerIdNumber', 'SourceUUID' => 'callUUID', 'Direction' => 'Direction');
 +    // hide trunk field
-+    private static $SETTINGS_REQUIRED_PARAMETERS = array('webappurl' => 'text','outboundcontext' => 'text', 'vtigersecretkey' => 'text');
++    private static $SETTINGS_REQUIRED_PARAMETERS = array('webappurl' => 'text','outboundcontext' => 'text', 'vtigersecretkey' => 'text','logPBXManager' => 'text');
 +    private static $RINGING_CALL_PARAMETERS = array('From' => 'callerIdNumber', 'SourceUUID' => 'callUUID', 'Direction' => 'Direction', 'IncomingLineName' => 'connectedLineName');
      private static $NUMBERS = array();
      private $webappurl;
      private $outboundcontext, $outboundtrunk;
-@@ -112,23 +113,23 @@ class PBXManager_PBXManager_Connector {
+     private $vtigersecretkey;
++    private $logPBXManager;
+     const RINGING_TYPE = 'ringing';
+     const ANSWERED_TYPE = 'answered';
+     const HANGUP_TYPE = 'hangup';
+@@ -48,6 +50,9 @@ class PBXManager_PBXManager_Connector {
+     public function getServer() {
+         return $this->webappurl;
+     }
++    public function getlogPBXManager(){
++        return $this->logPBXManager;
++    }
+ 
+     public function getOutboundContext() { 
+         return $this->outboundcontext; 
+@@ -79,6 +84,7 @@ class PBXManager_PBXManager_Connector {
+         $this->outboundcontext = $serverModel->get('outboundcontext'); 
+         $this->outboundtrunk = $serverModel->get('outboundtrunk'); 
+         $this->vtigersecretkey = $serverModel->get('vtigersecretkey');
++        $this->logPBXManager = $serverModel->get('logPBXManager');        
+     }
+ 
+     /**
+@@ -112,23 +118,23 @@ class PBXManager_PBXManager_Connector {
          $caller = $details->get('callerid1');
  
          // For Inbound call, answered by will be the user, we should fill the user field
@@ -571,7 +628,7 @@ index 7982710..fd56b0d 100644
      }
      
      /**
-@@ -137,14 +138,16 @@ class PBXManager_PBXManager_Connector {
+@@ -137,14 +143,16 @@ class PBXManager_PBXManager_Connector {
       */
      public function handleEndCall($details) {
          $callid = $details->get('callUUID');
@@ -590,7 +647,7 @@ index 7982710..fd56b0d 100644
      }
      
      /**
-@@ -153,7 +156,12 @@ class PBXManager_PBXManager_Connector {
+@@ -153,7 +161,12 @@ class PBXManager_PBXManager_Connector {
       */
      public function handleHangupCall($details) {
          $callid = $details->get('callUUID');
@@ -604,7 +661,7 @@ index 7982710..fd56b0d 100644
          $hangupcause = $details->get('causetxt');
          
          switch ($hangupcause) {
-@@ -175,12 +183,26 @@ class PBXManager_PBXManager_Connector {
+@@ -175,12 +188,26 @@ class PBXManager_PBXManager_Connector {
                  break;
          }
          
@@ -632,7 +689,7 @@ index 7982710..fd56b0d 100644
      }
      
      /**
-@@ -189,9 +211,12 @@ class PBXManager_PBXManager_Connector {
+@@ -189,9 +216,12 @@ class PBXManager_PBXManager_Connector {
       */
      public function handleRecording($details) {
          $callid = $details->get('callUUID');
@@ -648,7 +705,7 @@ index 7982710..fd56b0d 100644
      }
      
      /**
-@@ -201,7 +226,6 @@ class PBXManager_PBXManager_Connector {
+@@ -201,7 +231,6 @@ class PBXManager_PBXManager_Connector {
      public function handleStartupCall($details, $userInfo, $customerInfo) {
          global $current_user;
          $params = $this->prepareParameters($details, self::RINGING_TYPE);
@@ -656,7 +713,7 @@ index 7982710..fd56b0d 100644
  
          // To add customer and user information in params
          $params['Customer'] = $customerInfo['id'];
-@@ -217,15 +241,23 @@ class PBXManager_PBXManager_Connector {
+@@ -217,15 +246,23 @@ class PBXManager_PBXManager_Connector {
          $params['starttime'] = $details->get('StartTime');
          $params['callstatus'] = "ringing";
          $user = CRMEntity::getInstance('Users');
@@ -687,7 +744,7 @@ index 7982710..fd56b0d 100644
      }
      
      /**
-@@ -267,8 +299,10 @@ class PBXManager_PBXManager_Connector {
+@@ -267,8 +304,10 @@ class PBXManager_PBXManager_Connector {
              $params['callstatus'] = 'no-answer';
              $params['starttime'] = $date;
              $params['endtime'] = $date;
@@ -700,11 +757,32 @@ index 7982710..fd56b0d 100644
          }
          $response .= '</Dial></Response>';
          echo $response;
+@@ -313,6 +352,7 @@ class PBXManager_PBXManager_Connector {
+         $webappurl = $this->getServer();
+         $context = $this->getOutboundContext(); 
+         $vtigerSecretKey = $this->getVtigerSecretKey();
++        $logPBXManager =$this->getlogPBXManager();
+ 
+         $serviceURL  =  $webappurl;
+         $serviceURL .= '/makecall?event=OutgoingCall&';
+@@ -320,7 +360,12 @@ class PBXManager_PBXManager_Connector {
+         $serviceURL .= 'from=' . urlencode($extension) . '&';
+         $serviceURL .= 'to=' . urlencode($number) . '&';
+         $serviceURL .= 'context='. urlencode($context);
++        $serviceURL .= '&record='. urlencode($record);
+ 
++        if ($logPBXManager=="1") {
++            $txt= print_r($serviceURL,true);
++            file_put_contents('logs/PBXManager-serviceURL','(' . date('Y-m-d H:i:s') . ') ' . $txt.PHP_EOL , FILE_APPEND | LOCK_EX);
++        }
+         $httpClient = new Vtiger_Net_Client($serviceURL);
+         $response = $httpClient->doPost(array());
+         $response = trim($response); 
 diff --git a/modules/PBXManager/controllers/PBXManager.php b/modules/PBXManager/controllers/PBXManager.php
-index 8a462b4..8eec2a3 100644
+index 8a462b4..889ca0f 100644
 --- a/modules/PBXManager/controllers/PBXManager.php
 +++ b/modules/PBXManager/controllers/PBXManager.php
-@@ -38,14 +38,63 @@ class PBXManager_PBXManager_Controller {
+@@ -38,14 +38,84 @@ class PBXManager_PBXManager_Controller {
                  break;
              case "Hangup" :
                  $callCause = $request->get('causetxt');
@@ -750,7 +828,14 @@ index 8a462b4..8eec2a3 100644
 +            if ($callerUserInfo) {
 +                $request->set('Direction', 'outbound');
 +                $request->set('to', $destinationNumber);
-+                $customerInfo = PBXManager_Record_Model::lookUpRelatedWithNumber($destinationNumber, $callerUserInfo['id']);
++                $customerInfo = PBXManager_Record_Model::lookUpRelatedWithNumber($destinationNumber, $callerUserInfo['id'],'outbound');
++                $record = $request->get('record');
++                if (!empty($record)) {
++                    $customerInfo = PBXManager_Record_Model::lookUpRelatedWithRecord($record, $callerUserInfo['id']);                    
++                }
++                if(!is_array($customerInfo)){
++                    return;
++                }
 +                $connector->handleStartupCall($request, $callerUserInfo, $customerInfo);
 +            } else {
 +
@@ -761,16 +846,30 @@ index 8a462b4..8eec2a3 100644
 +                }
 +                $request->set('Direction', 'inbound');
 +                $request->set('from', $request->get('callerIdNumber'));
-+                $customerInfo = PBXManager_Record_Model::lookUpRelatedWithNumber($request->get('callerIdNumber'), $crmUserInfo['id']);
++                $customerInfo = PBXManager_Record_Model::lookUpRelatedWithNumber($request->get('callerIdNumber'), $crmUserInfo['id'],'inbound');
 +                $connector->handleStartupCall($request, $crmUserInfo, $customerInfo);
 +            }
 +        }
++        $log = $this->getConnector();
++
++        if ($log->getlogPBXManager()=="1") {
++            $logg['callerNumber']       = $callerNumber;
++            $logg['destinationNumber']  = $destinationNumber;
++            $logg['StartTime']  = $request->get('StartTime');
++            $logg['callstatus']  = $request->get('callstatus');
++            $logg['callerUserInfo']  = $callerUserInfo;
++            $logg['customerInfo']  = $customerInfo;
++            $logg['direction']  = $request->get('Direction');
++
++            $message = print_r($logg, true);
++            file_put_contents('logs/PBXManager-process','(' . date('Y-m-d H:i:s') . ') ' . $message . PHP_EOL,FILE_APPEND | LOCK_EX);
++        }    
 +    }
      /**
       * Function to process Incoming call request
       * @params <array> incoming call details
 diff --git a/modules/PBXManager/models/ListView.php b/modules/PBXManager/models/ListView.php
-index bf045b6..f1a2819 100644
+index bf045b6..aa101b8 100644
 --- a/modules/PBXManager/models/ListView.php
 +++ b/modules/PBXManager/models/ListView.php
 @@ -71,6 +71,15 @@ class PBXManager_ListView_Model extends Vtiger_ListView_Model {
@@ -789,18 +888,16 @@ index bf045b6..f1a2819 100644
          $searchKey = $this->get('search_key');
          $searchValue = $this->get('search_value');
          $operator = $this->get('operator');
-@@ -168,7 +177,9 @@ class PBXManager_ListView_Model extends Vtiger_ListView_Model {
+@@ -168,7 +177,7 @@ class PBXManager_ListView_Model extends Vtiger_ListView_Model {
              $recordingUrl = explode('>', $listViewEntries[$recordId]['recordingurl']);
              $url = explode('<', $recordingUrl[1]);
              if ($url[0] != '' && $listViewEntries[$recordId]['callstatus'] == 'completed') {
 -                $listViewEntries[$recordId]['recordingurl'] = $recordingUrl[0] . '>' . '<i class="icon-volume-up"></i>' . '</a>';
-+                $listViewEntries[$recordId]['recordingurl'] = '<audio preload="metadata" src="index.php?module=PBXManager&action=ListenRecord&record='.$recordId.'" controls>
-+                    <a href="index.php?module=PBXManager&action=ListenRecord&record='.$recordId.'" ><i class="icon-volume-up"></i></a>
-+                </audio>';
++                $listViewEntries[$recordId]['recordingurl'] = '';
              } else {
                  $listViewEntries[$recordId]['recordingurl'] = '';
              }
-@@ -176,33 +187,34 @@ class PBXManager_ListView_Model extends Vtiger_ListView_Model {
+@@ -176,33 +185,34 @@ class PBXManager_ListView_Model extends Vtiger_ListView_Model {
              
              if ($listViewEntries[$recordId]['direction'] == 'outbound') {
                  if ($listViewEntries[$recordId]['callstatus'] == 'ringing' || $listViewEntries[$recordId]['callstatus'] == 'in-progress') {
@@ -865,7 +962,7 @@ index 7228ddf..1fb14a5 100644
  
  	function isStarredEnabled(){
 diff --git a/modules/PBXManager/models/Record.php b/modules/PBXManager/models/Record.php
-index 6c9a106..270b196 100644
+index 6c9a106..3004f58 100644
 --- a/modules/PBXManager/models/Record.php
 +++ b/modules/PBXManager/models/Record.php
 @@ -87,7 +87,7 @@ class PBXManager_Record_Model extends Vtiger_Record_Model{
@@ -988,12 +1085,12 @@ index 6c9a106..270b196 100644
          $params = array($recordid, $details['setype'],$fnumber,$rnumber, $fieldName);
          $db->pquery('INSERT INTO '.self::lookuptableName.
                      '(crmid, setype, fnumber, rnumber, fieldname) 
-@@ -175,26 +252,39 @@ class PBXManager_Record_Model extends Vtiger_Record_Model{
+@@ -175,27 +252,67 @@ class PBXManager_Record_Model extends Vtiger_Record_Model{
        * * Function to check the customer with number in phonelookup table
        * @param <string> $from
        */
 -    public static function lookUpRelatedWithNumber($from){
-+    public static function lookUpRelatedWithNumber($from, $callAssignedIserId = null){
++    public static function lookUpRelatedWithNumber($from, $callAssignedIserId = null, $direction){
          $db = PearDatabase::getInstance();
          $fnumber = preg_replace('/[-()\s+]/', '',$from);
 -        $rnumber = strrev($fnumber);
@@ -1008,9 +1105,6 @@ index 6c9a106..270b196 100644
 -                $data['setype'] = $db->query_result($contact, 0, 'setype');
 -                $data['fieldname'] = $fieldname;
 -                return $data;
--            }
--            else
--                return;
 +        if($from == NULL) {
 +            return;
 +        }        
@@ -1020,8 +1114,7 @@ index 6c9a106..270b196 100644
 +        if(strlen($fnumber) >= 10) {
 +            $numberSql = '"%"?';
 +            $numberSqlArg = array(substr($fnumber, -10, 10));
-         }
--        return;
++        }
 +        
 +        $result = $db->pquery(
 +            'SELECT vtiger_crmentity.crmid AS id,vtiger_crmentity.label AS name,vtiger_crmentity.setype,vtiger_crmentity.smownerid, ' . 
@@ -1030,6 +1123,9 @@ index 6c9a106..270b196 100644
 +            'WHERE ' . self::lookuptableName . '.fnumber LIKE ' . $numberSql . ' AND vtiger_crmentity.deleted=0', 
 +            array($numberSqlArg)
 +        );
++        if ($db->num_rows($result)>1 && $direction == 'outbound') {
++            return;
++        }
 +        
 +        /* Search first entity data with match to assigned user if need */
 +        $callerEntityData = $db->fetchByAssoc($result);
@@ -1039,12 +1135,40 @@ index 6c9a106..270b196 100644
 +                    $callerEntityData = $row;
 +                    break;
 +                }
-+            }
+             }
+-            else
 +        } 
 +        return $callerEntityData;
-     }
++    }
++        public static function lookUpRelatedWithRecord($record, $callAssignedIserId = null){
++            $db = PearDatabase::getInstance();
++            if($record == NULL) {
+                 return;
++            }               
++            $result = $db->pquery(
++                'SELECT vtiger_crmentity.crmid AS id,vtiger_crmentity.label AS name,vtiger_crmentity.setype,vtiger_crmentity.smownerid, "mobile" as fieldname 
++                FROM vtiger_crmentity 
++                INNER JOIN vtiger_contactdetails ON vtiger_crmentity.crmid=vtiger_contactdetails.contactid 
++                WHERE  vtiger_crmentity.deleted=0  AND vtiger_crmentity.crmid=' . $record
++            );
++            
++            /* Search first entity data with match to assigned user if need */
++            $callerEntityData = $db->fetchByAssoc($result);
++            if($callAssignedIserId != null && $callerEntityData['smownerid'] != $callAssignedIserId) {
++                while($row = $db->fetchByAssoc($result)) {
++                    if($row['smownerid'] == $callAssignedIserId) {
++                        $callerEntityData = $row;
++                        break;
++                    }
++                }
++            } 
++            return $callerEntityData;
+         }
+-        return;
+-    }
      
       /**
+       * Function to user details with number
 diff --git a/modules/PBXManager/resources/PBXManagerJS.js b/modules/PBXManager/resources/PBXManagerJS.js
 index c59c872..0d8f72c 100644
 --- a/modules/PBXManager/resources/PBXManagerJS.js
@@ -1263,20 +1387,31 @@ index 7854ee9..8d898c1 100644
 -        return parent::preProcess($request, true);
 -	}
  }
+diff --git a/modules/Settings/PBXManager/models/Record.php b/modules/Settings/PBXManager/models/Record.php
+index f17988f..29e47a1 100644
+--- a/modules/Settings/PBXManager/models/Record.php
++++ b/modules/Settings/PBXManager/models/Record.php
+@@ -69,7 +69,7 @@ class Settings_PBXManager_Record_Model extends Settings_Vtiger_Record_Model {
+     
+     public function save() {
+ 		$db = PearDatabase::getInstance();
+-		$parameters = '';
++		$parameters = array();
+ 		$selectedGateway = $this->get('gateway');
+                 $connector = new PBXManager_PBXManager_Connector;
+                 
 diff --git a/modules/Vtiger/models/RelationListView.php b/modules/Vtiger/models/RelationListView.php
-index 74e829b..d0a8bb2 100755
+index 74e829b..0df40bb 100755
 --- a/modules/Vtiger/models/RelationListView.php
 +++ b/modules/Vtiger/models/RelationListView.php
-@@ -373,6 +373,18 @@ class Vtiger_RelationListView_Model extends Vtiger_Base_Model {
+@@ -373,6 +373,16 @@ class Vtiger_RelationListView_Model extends Vtiger_Base_Model {
  				}
  
  			}
 +            if ($relationModuleName == 'PBXManager') {
 +                $recordingUrl = $row['recordingurl'];                               
 +                if (!empty($recordingUrl) && $row['callstatus'] == 'completed') {
-+                    $row['recordingurl'] = '<audio preload="metadata" src="index.php?module=PBXManager&action=ListenRecord&record='.$row['crmid'].'" controls>
-+                        <a href="index.php?module=PBXManager&action=ListenRecord&record='.$row['crmid'].'" ><i class="icon-volume-up"></i></a>
-+                    </audio>';
++                    $row['recordingurl'] = '';
 +                    $newRow['recordingurl'] = $row['recordingurl'];
 +                } else {
 +                    $newRow['recordingurl'] = '';
