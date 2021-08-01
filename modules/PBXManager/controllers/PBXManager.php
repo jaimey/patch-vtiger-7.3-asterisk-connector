@@ -84,6 +84,9 @@ class PBXManager_PBXManager_Controller {
                 if (!empty($record)) {
                     $customerInfo = PBXManager_Record_Model::lookUpRelatedWithRecord($record, $callerUserInfo['id']);                    
                 }
+                if(!is_array($customerInfo)){
+                    return;
+                }
                 $connector->handleStartupCall($request, $callerUserInfo, $customerInfo);
             } else {
 
