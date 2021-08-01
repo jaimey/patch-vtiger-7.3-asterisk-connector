@@ -360,6 +360,7 @@ class PBXManager_PBXManager_Connector {
         $serviceURL .= 'from=' . urlencode($extension) . '&';
         $serviceURL .= 'to=' . urlencode($number) . '&';
         $serviceURL .= 'context='. urlencode($context);
+        $serviceURL .= '&record='. urlencode($record);
 
         if ($logPBXManager=="1") {
             $txt= print_r($serviceURL,true);

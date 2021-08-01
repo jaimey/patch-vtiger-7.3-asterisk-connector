@@ -286,6 +286,30 @@ class PBXManager_Record_Model extends Vtiger_Record_Model{
         } 
         return $callerEntityData;
     }
+        public static function lookUpRelatedWithRecord($record, $callAssignedIserId = null){
+            $db = PearDatabase::getInstance();
+            if($record == NULL) {
+                return;
+            }               
+            $result = $db->pquery(
+                'SELECT vtiger_crmentity.crmid AS id,vtiger_crmentity.label AS name,vtiger_crmentity.setype,vtiger_crmentity.smownerid, "mobile" as fieldname 
+                FROM vtiger_crmentity 
+                INNER JOIN vtiger_contactdetails ON vtiger_crmentity.crmid=vtiger_contactdetails.contactid 
+                WHERE  vtiger_crmentity.deleted=0  AND vtiger_crmentity.crmid=' . $record
+            );
+            
+            /* Search first entity data with match to assigned user if need */
+            $callerEntityData = $db->fetchByAssoc($result);
+            if($callAssignedIserId != null && $callerEntityData['smownerid'] != $callAssignedIserId) {
+                while($row = $db->fetchByAssoc($result)) {
+                    if($row['smownerid'] == $callAssignedIserId) {
+                        $callerEntityData = $row;
+                        break;
+                    }
+                }
+            } 
+            return $callerEntityData;
+        }
     
      /**
       * Function to user details with number

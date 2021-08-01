@@ -80,6 +80,10 @@ class PBXManager_PBXManager_Controller {
                 $request->set('Direction', 'outbound');
                 $request->set('to', $destinationNumber);
                 $customerInfo = PBXManager_Record_Model::lookUpRelatedWithNumber($destinationNumber, $callerUserInfo['id']);
+                $record = $request->get('record');
+                if (!empty($record)) {
+                    $customerInfo = PBXManager_Record_Model::lookUpRelatedWithRecord($record, $callerUserInfo['id']);                    
+                }
                 $connector->handleStartupCall($request, $callerUserInfo, $customerInfo);
             } else {
 
