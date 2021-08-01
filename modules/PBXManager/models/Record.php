@@ -252,7 +252,7 @@ class PBXManager_Record_Model extends Vtiger_Record_Model{
       * * Function to check the customer with number in phonelookup table
       * @param <string> $from
       */
-    public static function lookUpRelatedWithNumber($from, $callAssignedIserId = null){
+    public static function lookUpRelatedWithNumber($from, $callAssignedIserId = null, $direction){
         $db = PearDatabase::getInstance();
         $fnumber = preg_replace('/[-()\s+]/', '',$from);
         if($from == NULL) {
@@ -273,6 +273,9 @@ class PBXManager_Record_Model extends Vtiger_Record_Model{
             'WHERE ' . self::lookuptableName . '.fnumber LIKE ' . $numberSql . ' AND vtiger_crmentity.deleted=0', 
             array($numberSqlArg)
         );
+        if ($db->num_rows($result)>1 && $direction == 'outbound') {
+            return;
+        }
         
         /* Search first entity data with match to assigned user if need */
         $callerEntityData = $db->fetchByAssoc($result);

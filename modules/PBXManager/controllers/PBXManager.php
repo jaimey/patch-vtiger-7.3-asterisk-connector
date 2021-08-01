@@ -79,7 +79,7 @@ class PBXManager_PBXManager_Controller {
             if ($callerUserInfo) {
                 $request->set('Direction', 'outbound');
                 $request->set('to', $destinationNumber);
-                $customerInfo = PBXManager_Record_Model::lookUpRelatedWithNumber($destinationNumber, $callerUserInfo['id']);
+                $customerInfo = PBXManager_Record_Model::lookUpRelatedWithNumber($destinationNumber, $callerUserInfo['id'],'outbound');
                 $record = $request->get('record');
                 if (!empty($record)) {
                     $customerInfo = PBXManager_Record_Model::lookUpRelatedWithRecord($record, $callerUserInfo['id']);                    
@@ -94,7 +94,7 @@ class PBXManager_PBXManager_Controller {
                 }
                 $request->set('Direction', 'inbound');
                 $request->set('from', $request->get('callerIdNumber'));
-                $customerInfo = PBXManager_Record_Model::lookUpRelatedWithNumber($request->get('callerIdNumber'), $crmUserInfo['id']);
+                $customerInfo = PBXManager_Record_Model::lookUpRelatedWithNumber($request->get('callerIdNumber'), $crmUserInfo['id'],'inbound');
                 $connector->handleStartupCall($request, $crmUserInfo, $customerInfo);
             }
         }
