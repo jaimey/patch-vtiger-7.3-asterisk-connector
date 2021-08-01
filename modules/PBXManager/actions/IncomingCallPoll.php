@@ -115,7 +115,7 @@ class PBXManager_IncomingCallPoll_Action extends Vtiger_Action_Controller{
             $element['lastname'] = $request->get('lastname');
             $element['firstname'] = $request->get('firstname');
             $element['email'] = $request->get('email');
-            $element['phone'] = $request->get('number');
+            $element['mobile'] = $request->get('number');
             $element['assigned_user_id'] = vtws_getWebserviceEntityId('Users', $user->id);
             
             $moduleInstance = Vtiger_Module_Model::getInstance($moduleName);
