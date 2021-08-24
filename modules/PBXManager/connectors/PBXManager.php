@@ -352,7 +352,6 @@ class PBXManager_PBXManager_Connector {
         $webappurl = $this->getServer();
         $context = $this->getOutboundContext(); 
         $vtigerSecretKey = $this->getVtigerSecretKey();
-        $logPBXManager =$this->getlogPBXManager();
 
         $serviceURL  =  $webappurl;
         $serviceURL .= '/makecall?event=OutgoingCall&';
@@ -362,10 +361,8 @@ class PBXManager_PBXManager_Connector {
         $serviceURL .= 'context='. urlencode($context);
         $serviceURL .= '&record='. urlencode($record);
 
-        if ($logPBXManager=="1") {
-            $txt= print_r($serviceURL,true);
-            file_put_contents('logs/PBXManager-serviceURL','(' . date('Y-m-d H:i:s') . ') ' . $txt.PHP_EOL , FILE_APPEND | LOCK_EX);
-        }
+        $this->log($serviceURL, 'PBXManager-serviceURL');
+
         $httpClient = new Vtiger_Net_Client($serviceURL);
         $response = $httpClient->doPost(array());
         $response = trim($response); 
@@ -377,4 +374,8 @@ class PBXManager_PBXManager_Connector {
         return true;
     }
 
+    public function log($log, $file) {
+        if ($this->getlogPBXManager() == "1" )
+            file_put_contents('logs/'.$file,'(' . date('Y-m-d H:i:s') . ') ' . print_r($log, true) . PHP_EOL , FILE_APPEND | LOCK_EX);        
+    }
 }

@@ -76,6 +76,9 @@ class PBXManager_PBXManager_Controller {
    
             /* If caller number binded with crm user - it outgoing number */
             $connector = $this->getConnector();
+            $log['time']  = $request->get('StartTime');
+            $log['from']       = $callerNumber;
+            $log['to']  = $destinationNumber;
             if ($callerUserInfo) {
                 $request->set('Direction', 'outbound');
                 $request->set('to', $destinationNumber);
@@ -84,7 +87,10 @@ class PBXManager_PBXManager_Controller {
                 if (!empty($record)) {
                     $customerInfo = PBXManager_Record_Model::lookUpRelatedWithRecord($record, $callerUserInfo['id']);                    
                 }
+                $from_details   = $callerUserInfo;
+                $to_details     = $customerInfo;
                 if(!is_array($customerInfo)){
+                    $connector->log($destinationNumber . ' not found in vtiger. Outbound call ignored.' , 'PBXManager-process');
                     return;
                 }
                 $connector->handleStartupCall($request, $callerUserInfo, $customerInfo);
@@ -93,28 +99,26 @@ class PBXManager_PBXManager_Controller {
                 /* If no match of twon numbers for crm users - don't fix ring */
                 $crmUserInfo = PBXManager_Record_Model::getUserInfoWithNumber($destinationNumber);
                 if(!$crmUserInfo) {
+                    $connector->log('Destinantion ' . $destinationNumber . ' not found in vtiger. Call ignored.', 'PBXManager-process');
                     return;
                 }
                 $request->set('Direction', 'inbound');
                 $request->set('from', $request->get('callerIdNumber'));
                 $customerInfo = PBXManager_Record_Model::lookUpRelatedWithNumber($request->get('callerIdNumber'), $crmUserInfo['id'],'inbound');
+                if(!is_array($customerInfo)){
+                    // Descomentar si se quiere ignorar las llamadas de clientes no registrados en CRM. No Popup de desconocidos.
+                    // $connector->log('Inbound ' . $callerNumber . ' not found in vtiger. Call ignored.' , 'PBXManager-process');
+                    // return;
+                }
+                $from_details   = $customerInfo;
+                $to_details     = $crmUserInfo;
                 $connector->handleStartupCall($request, $crmUserInfo, $customerInfo);
             }
+            $log['from_details']= $from_details;
+            $log['to_details']  = $to_details;
+            $log['direction']   = $request->get('Direction');
+            $connector->log($log , 'PBXManager-process');
         }
-        $log = $this->getConnector();
-
-        if ($log->getlogPBXManager()=="1") {
-            $logg['callerNumber']       = $callerNumber;
-            $logg['destinationNumber']  = $destinationNumber;
-            $logg['StartTime']  = $request->get('StartTime');
-            $logg['callstatus']  = $request->get('callstatus');
-            $logg['callerUserInfo']  = $callerUserInfo;
-            $logg['customerInfo']  = $customerInfo;
-            $logg['direction']  = $request->get('Direction');
-
-            $message = print_r($logg, true);
-            file_put_contents('logs/PBXManager-process','(' . date('Y-m-d H:i:s') . ') ' . $message . PHP_EOL,FILE_APPEND | LOCK_EX);
-        }    
     }
     /**
      * Function to process Incoming call request
