@@ -90,7 +90,9 @@ class PBXManager_PBXManager_Controller {
                 $from_details   = $callerUserInfo;
                 $to_details     = $customerInfo;
                 if(!is_array($customerInfo)){
-                    $connector->log($destinationNumber . ' not found in vtiger. Outbound call ignored.' , 'PBXManager-process');
+                    $log['from_details'] = $callerUserInfo;
+                    $log['description'] = $destinationNumber . ' not found in vtiger. Outbound call ignored.';
+                    $connector->log($log , 'PBXManager-process');
                     return;
                 }
                 $connector->handleStartupCall($request, $callerUserInfo, $customerInfo);
@@ -99,7 +101,8 @@ class PBXManager_PBXManager_Controller {
                 /* If no match of twon numbers for crm users - don't fix ring */
                 $crmUserInfo = PBXManager_Record_Model::getUserInfoWithNumber($destinationNumber);
                 if(!$crmUserInfo) {
-                    $connector->log('Destinantion ' . $destinationNumber . ' not found in vtiger. Call ignored.', 'PBXManager-process');
+                    $log['description'] = 'Destination ' . $destinationNumber . ' not found in vtiger. Call ignored.';
+                    $connector->log($log, 'PBXManager-process');
                     return;
                 }
                 $request->set('Direction', 'inbound');
