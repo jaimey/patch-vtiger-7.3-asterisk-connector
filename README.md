@@ -9,7 +9,7 @@ This patch makes Vtiger 7.3 compatible with [SPAsteriskConnector](https://salesp
 
 2. Download the patch: 
 ```
-wget https://raw.githubusercontent.com/jaimey/patch-vtiger-7.3-asterisk-connector/main/patch/0001-feat-make-Vtiger-7.3-compatible-with-SPAsteriskConne.patch
+wget https://github.com/jaimey/patch-vtiger-7.3-asterisk-connector/releases/download/1.1.0/make-vtiger73compatible-with-SPAsteriskConnector.patch
 ```
 
 3. Check the patch compatibility:
